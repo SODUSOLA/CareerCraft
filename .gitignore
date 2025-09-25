@@ -1,0 +1,11 @@
+# Build files for Prisma
+/generated/prisma
+
+# Node modules
+/node_modules
+
+# Environment variables
+.env
+
+
+.DS_Store
