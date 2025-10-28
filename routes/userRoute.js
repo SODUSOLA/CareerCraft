@@ -1,91 +1,16 @@
 import express from 'express';
 import {protect} from '../middleware/authMiddleware.js';
-import { registerUser, loginUser, getUserProfile, updateUserProfile } from '../controllers/userController.js';
+import { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword, changePassword } from '../controllers/userController.js';
+import { validateRequest, registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema, changePasswordSchema } from '../middleware/validationMiddleware.js';
 const router = express.Router();
 
 
-// swagger documentation for user login
-
-/**
- * @swagger
- * /api/users/login:
- *   post:
- *     summary: Log in a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: user@example.com
- *               password:
- *                 type: string
- *                 example: password123
- *     responses:
- *       200:
- *         description: Successfully logged in
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
- *       401:
- *         description: Invalid credentials
- */
-
-
-// swagger documentation for user registration
-
-/**
- * @swagger
- * /api/users/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - username
- *               - email
- *               - password
- *             properties:
- *               username:
- *                 type: string
- *                 example: Jane Doe
- *               email:
- *                 type: string
- *                 example: janedoe@example.com
- *               password:
- *                 type: string
- *                 example: password123
- *     responses:
- *       201:
- *         description: User registered successfully
- *       400:
- *         description: User already exists or bad input
- */
-
-
-
-
-
 // POST /api/users
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+router.post('/register', validateRequest(registerSchema), registerUser);
+router.post('/login', validateRequest(loginSchema), loginUser);
+router.post('/forgot-password', validateRequest(forgotPasswordSchema), forgotPassword);
+router.post('/reset-password', validateRequest(resetPasswordSchema), resetPassword);
+router.put('/change-password', protect, validateRequest(changePasswordSchema), changePassword);
 router.get('/me', protect, getUserProfile);
 router.put('/me', protect, updateUserProfile);
 

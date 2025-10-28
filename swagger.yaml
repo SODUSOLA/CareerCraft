@@ -1,0 +1,550 @@
+openapi: 3.0.0
+info:
+  title: CareerCraft API
+  version: 1.0.0
+  description: API documentation for the CareerCraft app which allows users crafting smart career decisions using AI-powered insights.
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      required:
+        - username
+        - password
+        - email
+      properties:
+        id:
+          type: string
+          description: User ID
+          example: 64a1e3f9885cd2b9f66c5678
+        username:
+          type: string
+          description: Username of the user
+          example: John Doe
+        email:
+          type: string
+          description: Email address of the user
+          example: johndoe@example.com
+        password:
+          type: string
+          description: Password of the user
+          example: password123
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Validation failed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: email
+              message:
+                type: string
+                example: Invalid email format
+security:
+  - bearerAuth: []
+paths:
+  /api/users/register:
+    post:
+      summary: Register a new user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+                - confirmPassword
+              properties:
+                username:
+                  type: string
+                  example: Jane Doe
+                email:
+                  type: string
+                  example: janedoe@example.com
+                password:
+                  type: string
+                  example: password123
+                confirmPassword:
+                  type: string
+                  example: password123
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+        400:
+          description: User already exists or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/users/login:
+    post:
+      summary: Log in a user
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        200:
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6...
+        400:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/users/forgot-password:
+    post:
+      summary: Request password reset
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+      responses:
+        200:
+          description: Reset code sent to email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reset code sent to your email
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/users/reset-password:
+    post:
+      summary: Reset password with code
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - resetCode
+                - newPassword
+                - confirmPassword
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                resetCode:
+                  type: string
+                  example: 123456
+                newPassword:
+                  type: string
+                  example: newpassword123
+                confirmPassword:
+                  type: string
+                  example: newpassword123
+      responses:
+        200:
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password reset successfully
+        400:
+          description: Invalid code or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/users/change-password:
+    put:
+      summary: Change password for authenticated user
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - oldPassword
+                - newPassword
+                - confirmPassword
+              properties:
+                oldPassword:
+                  type: string
+                  example: oldpassword123
+                newPassword:
+                  type: string
+                  example: newpassword123
+                confirmPassword:
+                  type: string
+                  example: newpassword123
+      responses:
+        200:
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password changed successfully
+        400:
+          description: Incorrect old password or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/users/me:
+    get:
+      summary: Get current user profile
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update user profile
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: Updated Name
+                email:
+                  type: string
+                  example: updated@example.com
+                password:
+                  type: string
+                  example: newpassword123
+      responses:
+        200:
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/career/query:
+    post:
+      summary: Get career advice using CareerCraft Query 2.0
+      tags: [Career]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  example: What are the pros and cons of becoming a software engineer?
+      responses:
+        200:
+          description: Career advice generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Career advice generated
+                  advice:
+                    type: object
+                    properties:
+                      overview:
+                        type: string
+                        example: Software engineers design, develop, and maintain software systems and applications.
+                      pros:
+                        type: array
+                        items:
+                          type: string
+                        example: ["High demand and excellent job security", "Competitive salaries and benefit packages"]
+                      cons:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Demanding work hours and tight deadlines at times", "Constant need to learn new technologies"]
+                      career_paths:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Frontend Developer", "Backend Developer", "Full-stack Developer"]
+                      recommended_skills:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Proficiency in programming languages (e.g., Python, Java, JavaScript, C++)", "Data Structures and Algorithms"]
+                      learning_resources:
+                        type: array
+                        items:
+                          type: string
+                        example: ["Coursera (Specializations from top universities)", "Udemy (Project-based courses for practical skills)"]
+                  logId:
+                    type: string
+                    example: log123
+        400:
+          description: Query required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Error generating advice
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/chat/{sessionId}:
+    post:
+      summary: Handle chat session
+      tags: [Chat]
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+          description: Chat session ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  example: Tell me about career paths in tech
+      responses:
+        200:
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response:
+                    type: string
+                    example: Based on your interests...
+        400:
+          description: Query required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
+          description: Session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Chat error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/history:
+    get:
+      summary: Get user's career query history
+      tags: [History]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: History retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: log123
+                    userId:
+                      type: string
+                      example: user123
+                    query:
+                      type: string
+                      example: What are the pros and cons of becoming a software engineer?
+                    response:
+                      type: object
+                      example: {"overview": "Software engineers...", "pros": ["High demand"], "cons": ["High stress"]}
+                    createdAt:
+                      type: string
+                      format: date-time
+                      example: 2023-10-27T16:27:23.978Z
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/history/{id}:
+    delete:
+      summary: Delete a specific history entry
+      tags: [History]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: History entry ID
+      responses:
+        200:
+          description: History entry deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: History entry deleted successfully
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          description: History entry not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

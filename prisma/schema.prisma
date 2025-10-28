@@ -1,4 +1,5 @@
 // This is your Prisma schema file,
+
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -12,19 +13,37 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
+  id                String   @id @default(uuid())
+  username          String   @unique
+  email             String   @unique
+  password          String
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime @default(now())
 }
 
 model CareerLog {
   id        String   @id @default(uuid())
-  userId    String  
+  userId    String?
   query     String
   response  Json
   createdAt DateTime @default(now())
+}
+
+model ChatSession {
+  id            String    @id @default(uuid())
+  userId        String?
+  isActive      Boolean   @default(true)
+  lastActivity  DateTime
+  messages      ChatMessage[]
+}
+
+model ChatMessage{
+  id            String    @id @default(uuid())
+  sessionId     String
+  session       ChatSession @relation(fields: [sessionId], references: [id])  
+  userMessage   String
+  botResponse   String
+  createdAt     DateTime @default(now())
 }
